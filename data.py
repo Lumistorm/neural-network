@@ -3,12 +3,15 @@ import struct
 
 
 def load_mnist():
-    with (np.load('mnist.npz') as f):
-        x_train = f['x_train'].shape + (1,)
-        y_train = f['y_train'].shape + (1,)
-        x_test = f['x_test'].shape + (1,)
-        y_test = f['y_test'].shape + (1,)
+    with np.load('mnist.npz') as f:
+        x_train = f['x_train']
+        y_train = f['y_train']
 
-    return (x_train, y_train), (x_test, y_test)
+    x_train = x_train.astype(np.float32) / 255
+    x_train.shape = (x_train.shape[0], x_train.shape[1] * x_train.shape[2])
+
+    y_train = np.eye(10)[y_train]
+
+    return x_train, y_train
 
 

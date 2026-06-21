@@ -1,62 +1,138 @@
 import numpy as np
+np.random.seed(3)
+
+
+class Sigmoid:
+    def __init__(self):
+        self.output = None
+
+    def forward(self, weighted_sum):
+        self.output = 1 / (1 + np.exp(-weighted_sum))
+        return self.output
+
+    def backward(self, gradiant):
+        return gradiant * self.output * (1 - self.output)
+
+
+class ReLU:
+    def __init__(self):
+        self.output = None
+
+    def forward(self, weighted_sum):
+        self.output = np.maximum(weighted_sum, 0)
+        return self.output
+
+    def backward(self, gradiant):
+        return gradiant * (self.output > 0)
+
+
+class SoftMax:
+    def __init__(self):
+        self.output = None
+
+    def forward(self, weighted_sum):
+        exp_shift = np.exp(weighted_sum - np.max(weighted_sum))
+        self.output = exp_shift / np.sum(exp_shift, axis=0, keepdims=True)
+        return self.output
+
+    def backward(self, gradient):
+        return gradient
+
+
+class Linear:
+    def __init__(self, in_features, out_features):
+        self.weights = np.random.uniform(-0.5, 0.5, (out_features, in_features))
+        self.bias = np.zeros((out_features, 1))
+        self.inputs = None
+        self.delta_weights = None
+        self.delta_bias = None
+
+    def forward(self, inputs):
+        self.inputs = inputs
+
+        return self.weights @ inputs + self.bias
+
+    def backward(self, gradient):
+        self.delta_weights = gradient @ self.inputs.T
+        self.delta_bias = np.sum(gradient, axis=1, keepdims=True)
+
+        return self.weights.T @ gradient
+
+    def update_parameters(self, learning_rate):
+        self.weights -= learning_rate * self.delta_weights
+        self.bias -= learning_rate * self.delta_bias
 
 
 class NeuralNetwork:
     def __init__(self):
-        self.weights1 = np.random.uniform(-0.5, 0.5, (16, 784))
-        self.biases1 = np.random.uniform(-0.5, 0.5, (16, 1))
-
-        self.weights2 = np.random.uniform(-0.5, 0.5, (16, 16))
-        self.biases2 = np.random.uniform(-0.5, 0.5, (16, 1))
-
-        self.weights3 = np.random.uniform(-0.5, 0.5, (10, 16))
-        self.biases3 = np.random.uniform(-0.5, 0.5, (10, 1))
+        self.layers = [
+            Linear(784, 16),
+            ReLU(),
+            Linear(16, 16),
+            ReLU(),
+            Linear(16, 10),
+            SoftMax(),
+        ]
 
     def train(self, inputs, targets, epochs, batch_size, learning_rate):
         num_inputs = len(inputs)
         for epoch in range(epochs):
+            correct = 0
+
             indices = np.random.permutation(num_inputs)
             inputs_shuffled = inputs[indices]
             targets_shuffled = targets[indices]
 
-            for batch_start in range(0, batch_size, batch_size):
-                bath_end = batch_start + batch_size
+            for batch_start in range(0, num_inputs, batch_size):
+                batch_end = batch_start + batch_size
 
-                input_batch = inputs_shuffled[batch_start:bath_end]
-                target_batch = targets_shuffled[batch_start:bath_end]
-                outputs = self.forward(input_batch)
+                input_batch = inputs_shuffled[batch_start:batch_end].T
+                target_batch = targets_shuffled[batch_start:batch_end].T
+                prediction = self.forward_prop(input_batch)
 
-                loss = self.loss(outputs, target_batch)
+                # add correct predictions
+                predicted_result = np.argmax(prediction, axis=0)
+                target_result = np.argmax(target_batch, axis=0)
+                correct += np.sum(predicted_result == target_result)
 
-    def forward(self, inputs):
-        weighted_sums1 = self.weights1 @ inputs + self.biases1
-        self.hidden_outputs1 = 1 / (1 + np.exp(-weighted_sums1))
+                # calculate error value
+                mean_square_error = prediction - target_batch
 
-        weighted_sums2 = self.weights2 @ self.hidden_outputs1 + self.biases2
-        self.hidden_outputs2 = 1 / (1 + np.exp(-weighted_sums2))
+                self.backward_prop(mean_square_error / batch_size)
+                self.update_layers(learning_rate)
 
-        outputs = self.weights3 @ self.hidden_outputs2 + self.biases3
-        outputs = 1 / (1 + np.exp(-outputs))
+            print(round(correct / len(inputs), 4))
 
-        return outputs
+    def forward_prop(self, inputs):
+        for layer in self.layers:
+            inputs = layer.forward(inputs)
 
-    def backpropagation(self, outputs, targets):
-        delta_output = (outputs - targets) * (outputs * (1 - outputs))
-        grad_weights3 = self.hidden_outputs2.T @ delta_output
+        return inputs
 
-        delta_hidden2 = (grad_weights3.T @ delta_output) * (self.hidden_outputs2 * (1 - self.hidden_outputs2))
-        grad_weights2 = self.hidden_output1.T @ delta_output
+    def backward_prop(self, gradient):
+        for layer in reversed(self.layers):
+            gradient = layer.backward(gradient)
 
-        delta_hidden1 = (grad_weights2.T @ delta_output) * (self.hidden_outputs1 * (1 - self.hidden_outputs1))
-        grad_weights2 = self.hidden_output1.T @ delta_output
+    def update_layers(self, learning_rate):
+        for layer in self.layers:
+            if isinstance(layer, Linear):
+                layer.update_parameters(learning_rate)
 
-        self.weights1 -=
-        self.biases1 = np.random.uniform(-0.5, 0.5, (16, 1))
+    def save(self, path):
+        model_data = {}
 
-        self.weights2 = np.random.uniform(-0.5, 0.5, (16, 16))
-        self.biases2 = np.random.uniform(-0.5, 0.5, (16, 1))
+        for index, layer in enumerate(self.layers):
+            if isinstance(layer, Linear):
+                model_data[f'w_{index}'] = layer.weights
+                model_data[f'b_{index}'] = layer.bias
 
-        self.weights3 = np.random.uniform(-0.5, 0.5, (10, 16))
-        self.biases3 = np.random.uniform(-0.5, 0.5, (10, 1))
+        np.savez(path, **model_data)
 
+    def load(self, path):
+        with np.load(path) as f:
+            model_data = {key: f[key] for key in f.files}
 
+        for index, layer in enumerate(self.layers):
+            if isinstance(layer, Linear):
+                layer.weights = model_data[f'w_{index}']
+                layer.bias = model_data[f'b_{index}']

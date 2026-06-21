@@ -1,16 +1,10 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from neural_network import NeuralNetwork
+from data import load_mnist
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    model = NeuralNetwork()
+    x_train, y_train = load_mnist()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    model.train(x_train, y_train, 25, 50, 0.05)
+    model.save('model_0')
