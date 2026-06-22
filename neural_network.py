@@ -33,7 +33,7 @@ class SoftMax:
 
     def forward(self, weighted_sum):
         exp_shift = np.exp(weighted_sum - np.max(weighted_sum))
-        self.output = exp_shift / np.sum(exp_shift, axis=0, keepdims=True)
+        self.output = exp_shift / np.sum(exp_shift, axis=1, keepdims=True)
         return self.output
 
     def backward(self, gradient):
@@ -42,8 +42,10 @@ class SoftMax:
 
 class Linear:
     def __init__(self, in_features, out_features):
-        self.weights = np.random.uniform(-0.5, 0.5, (out_features, in_features))
-        self.bias = np.zeros((out_features, 1))
+        limit = np.sqrt(6 / in_features)
+        self.weights = np.random.uniform(-limit, limit, (in_features, out_features))
+        self.bias = np.zeros((out_features, ))
+
         self.inputs = None
         self.weights_gradient = None
         self.bias_gradient = None
@@ -51,13 +53,13 @@ class Linear:
     def forward(self, inputs):
         self.inputs = inputs
 
-        return self.weights @ inputs + self.bias
+        return inputs @ self.weights + self.bias
 
     def backward(self, gradient):
-        self.weights_gradient = gradient @ self.inputs.T
-        self.bias_gradient = np.sum(gradient, axis=1, keepdims=True)
+        self.weights_gradient = self.inputs.T @ gradient
+        self.bias_gradient = np.sum(gradient, axis=0)
 
-        return self.weights.T @ gradient
+        return gradient @ self.weights.T
 
     def update_parameters(self, learning_rate):
         self.weights -= learning_rate * self.weights_gradient
@@ -67,11 +69,11 @@ class Linear:
 class NeuralNetwork:
     def __init__(self):
         self.layers = [
-            Linear(784, 16),
+            Linear(784, 100),
             ReLU(),
-            Linear(16, 16),
+            Linear(100, 100),
             ReLU(),
-            Linear(16, 10),
+            Linear(100, 10),
             SoftMax(),
         ]
 
@@ -88,7 +90,7 @@ class NeuralNetwork:
         """
 
         num_inputs = len(inputs)
-        num_batches = math.ceil(num_inputs / batch_size)
+
         for epoch in range(epochs):
             correct = 0
             total_loss = 0
@@ -98,36 +100,39 @@ class NeuralNetwork:
             targets_shuffled = targets[indices]
 
             for batch_start in range(0, num_inputs, batch_size):
-                batch_end = batch_start + batch_size
-
                 # get batch data
-                input_batch = inputs_shuffled[batch_start:batch_end].T
-                target_batch = targets_shuffled[batch_start:batch_end].T
-                current_batch_size = input_batch.shape[1]
+                input_batch = inputs_shuffled[batch_start:batch_start + batch_size]
+                target_batch = targets_shuffled[batch_start:batch_start + batch_size]
+                current_batch_size = input_batch.shape[0]
 
                 # froward propagation
-                prediction = self.forward_prop(input_batch)
+                predictions = self.forward_prop(input_batch)
 
                 # add correct predictions
-                predicted_result = np.argmax(prediction, axis=0)
-                target_result = np.argmax(target_batch, axis=0)
-                correct += np.sum(predicted_result == target_result)
+                predicted_classes = np.argmax(predictions, axis=1)
+                target_result = np.argmax(target_batch, axis=1)
+                correct += np.sum(predicted_classes == target_result)
 
                 # calculate loss
-                epsilon = 1e-15
-                clipped_prediction = np.clip(prediction, epsilon, 1.0 - epsilon)
-                total_loss -= np.sum(target_batch * np.log(clipped_prediction)) / current_batch_size
+                total_loss += self.cross_entropy_loss(predictions, target_batch)
 
                 # calculate loss gradient
-                loss_gradient = (prediction - target_batch) / current_batch_size
+                loss_gradient = (predictions - target_batch) / current_batch_size
 
                 # backward_propagation
                 self.backward_prop(loss_gradient)
                 self.update_layers(learning_rate)
 
-            total_loss /= num_batches
+            total_loss /= num_inputs
             print(f'Total Loss: {total_loss:.4f}')
             print(f'Accuracy: {(correct / len(inputs)):.4f}')
+
+    def cross_entropy_loss(self, prediction, target):
+        epsilon = 1e-15
+        clipped_prediction = np.clip(prediction, epsilon, 1.0 - epsilon)
+        loss = -np.sum(target * np.log(clipped_prediction))
+
+        return np.mean(loss)
 
     def forward_prop(self, inputs):
         for layer in self.layers:
