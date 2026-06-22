@@ -1,3 +1,4 @@
+import math
 import numpy as np
 np.random.seed(3)
 
@@ -44,8 +45,8 @@ class Linear:
         self.weights = np.random.uniform(-0.5, 0.5, (out_features, in_features))
         self.bias = np.zeros((out_features, 1))
         self.inputs = None
-        self.delta_weights = None
-        self.delta_bias = None
+        self.weights_gradient = None
+        self.bias_gradient = None
 
     def forward(self, inputs):
         self.inputs = inputs
@@ -53,14 +54,14 @@ class Linear:
         return self.weights @ inputs + self.bias
 
     def backward(self, gradient):
-        self.delta_weights = gradient @ self.inputs.T
-        self.delta_bias = np.sum(gradient, axis=1, keepdims=True)
+        self.weights_gradient = gradient @ self.inputs.T
+        self.bias_gradient = np.sum(gradient, axis=1, keepdims=True)
 
         return self.weights.T @ gradient
 
     def update_parameters(self, learning_rate):
-        self.weights -= learning_rate * self.delta_weights
-        self.bias -= learning_rate * self.delta_bias
+        self.weights -= learning_rate * self.weights_gradient
+        self.bias -= learning_rate * self.bias_gradient
 
 
 class NeuralNetwork:
@@ -75,9 +76,22 @@ class NeuralNetwork:
         ]
 
     def train(self, inputs, targets, epochs, batch_size, learning_rate):
+        """
+        Gradient descent through multiple epochs
+
+        :param inputs:
+        :param targets:
+        :param epochs:
+        :param batch_size:
+        :param learning_rate:
+        :return:
+        """
+
         num_inputs = len(inputs)
+        num_batches = math.ceil(num_inputs / batch_size)
         for epoch in range(epochs):
             correct = 0
+            total_loss = 0
 
             indices = np.random.permutation(num_inputs)
             inputs_shuffled = inputs[indices]
@@ -86,8 +100,12 @@ class NeuralNetwork:
             for batch_start in range(0, num_inputs, batch_size):
                 batch_end = batch_start + batch_size
 
+                # get batch data
                 input_batch = inputs_shuffled[batch_start:batch_end].T
                 target_batch = targets_shuffled[batch_start:batch_end].T
+                current_batch_size = input_batch.shape[1]
+
+                # froward propagation
                 prediction = self.forward_prop(input_batch)
 
                 # add correct predictions
@@ -95,13 +113,21 @@ class NeuralNetwork:
                 target_result = np.argmax(target_batch, axis=0)
                 correct += np.sum(predicted_result == target_result)
 
-                # calculate error value
-                mean_square_error = prediction - target_batch
+                # calculate loss
+                epsilon = 1e-15
+                clipped_prediction = np.clip(prediction, epsilon, 1.0 - epsilon)
+                total_loss -= np.sum(target_batch * np.log(clipped_prediction)) / current_batch_size
 
-                self.backward_prop(mean_square_error / batch_size)
+                # calculate loss gradient
+                loss_gradient = (prediction - target_batch) / current_batch_size
+
+                # backward_propagation
+                self.backward_prop(loss_gradient)
                 self.update_layers(learning_rate)
 
-            print(round(correct / len(inputs), 4))
+            total_loss /= num_batches
+            print(f'Total Loss: {total_loss:.4f}')
+            print(f'Accuracy: {(correct / len(inputs)):.4f}')
 
     def forward_prop(self, inputs):
         for layer in self.layers:
