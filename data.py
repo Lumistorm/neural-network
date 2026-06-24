@@ -21,5 +21,3 @@ def load_mnist_test():
     y_test = np.eye(10)[y_test]
 
     return x_test, y_test
-
-

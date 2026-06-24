@@ -1,6 +1,4 @@
-import math
 import numpy as np
-np.random.seed(3)
 
 
 class Sigmoid:
@@ -32,7 +30,7 @@ class SoftMax:
         self.output = None
 
     def forward(self, weighted_sum):
-        exp_shift = np.exp(weighted_sum - np.max(weighted_sum))
+        exp_shift = np.exp(weighted_sum - np.max(weighted_sum, axis=1, keepdims=True))
         self.output = exp_shift / np.sum(exp_shift, axis=1, keepdims=True)
         return self.output
 
@@ -69,11 +67,11 @@ class Linear:
 class NeuralNetwork:
     def __init__(self):
         self.layers = [
-            Linear(784, 100),
+            Linear(784, 512),
             ReLU(),
-            Linear(100, 100),
+            Linear(512, 256),
             ReLU(),
-            Linear(100, 10),
+            Linear(256, 10),
             SoftMax(),
         ]
 

@@ -10,7 +10,8 @@ def train_model(path):
     model = NeuralNetwork()
     x_train, y_train = load_mnist_train()
 
-    model.train(x_train, y_train, 25, 57, 0.05)
+    model.train(x_train, y_train, 21, 10, 0.1)
+    # model.train(x_train, y_train, 21, 10, 0.1) 137
     model.save(path)
 
 
@@ -69,6 +70,10 @@ def run(model_path):
             grid_x = mouse_pos[0] // scale
             grid_y = mouse_pos[1] // scale
             image_array[0, grid_y * 28 + grid_x] = 1
+            image_array[0, (grid_y - 1) * 28 + grid_x] = 1
+            image_array[0, (grid_y + 1) * 28 + grid_x] = 1
+            # image_array[0, grid_y * 28 + grid_x + 1] = 1
+            image_array[0, grid_y * 28 + grid_x - 1] = 1
 
             # add lossy
             lossy = image_array.reshape((28, 28))
@@ -99,4 +104,4 @@ def run(model_path):
 
 
 if __name__ == '__main__':
-    run('model_0.npz')
+    run('model_extra_tuning.npz')
