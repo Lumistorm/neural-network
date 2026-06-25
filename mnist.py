@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def load_mnist_train():
+def preprocess_mnist_train():
     with np.load('mnist.npz') as f:
         x_train = f['x_train'].astype(np.float32) / 255
         y_train = f['y_train']
@@ -12,7 +12,7 @@ def load_mnist_train():
     return x_train, y_train
 
 
-def load_mnist_test():
+def preprocess_mnist_test():
     with np.load('mnist.npz') as f:
         x_test = f['x_test'].astype(np.float32) / 255
         y_test = f['y_test']

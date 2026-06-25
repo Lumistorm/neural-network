@@ -3,12 +3,12 @@ import pygame
 import sys
 
 from neural_network import NeuralNetwork
-from data import load_mnist_train, load_mnist_test
+from mnist import preprocess_mnist_train, preprocess_mnist_test
 
 
 def train_model(path):
     model = NeuralNetwork()
-    x_train, y_train = load_mnist_train()
+    x_train, y_train = preprocess_mnist_train()
 
     model.train(x_train, y_train, 21, 10, 0.1)
     # model.train(x_train, y_train, 21, 10, 0.1) 137
@@ -19,7 +19,7 @@ def test_model(path):
     model = NeuralNetwork()
     model.load(path
                )
-    x_test, y_test = load_mnist_test()
+    x_test, y_test = preprocess_mnist_test()
     correct = 0
     for index, inputs in enumerate(x_test):
         target = y_test[index]
