@@ -2,24 +2,28 @@ import numpy as np
 import pygame
 import sys
 
-from neural_network import NeuralNetwork
-from mnist import preprocess_mnist_train, preprocess_mnist_test
+from neural_network import Sequential, layers, activations, losses, mnist
 
 
 def train_model(path):
-    model = NeuralNetwork()
-    x_train, y_train = preprocess_mnist_train()
+    model_layers = [
+        layers.Linear(784, 512),
+        activations.ReLU(),
+        layers.Linear(512, 256),
+        activations.ReLU(),
+        layers.Linear(256, 10),
+        activations.Softmax(),
+    ]
+    model = Sequential(model_layers)
+    x_train, y_train = mnist.preprocess_mnist_train()
 
-    model.train(x_train, y_train, 21, 10, 0.1)
-    # model.train(x_train, y_train, 21, 10, 0.1) 137
+    model.train(x_train, y_train, batch_size=10, epochs=21, learning_rate=0.1)
     model.save(path)
 
 
 def test_model(path):
-    model = NeuralNetwork()
-    model.load(path
-               )
-    x_test, y_test = preprocess_mnist_test()
+    model = Sequential.load(path)
+    x_test, y_test = mnist.preprocess_mnist_test()
     correct = 0
     for index, inputs in enumerate(x_test):
         target = y_test[index]
@@ -28,7 +32,7 @@ def test_model(path):
 
         prediction = model.forward_prop(inputs)
 
-        loss = model.cross_entropy_loss(prediction, target)
+        loss = losses.cross_entropy_loss(prediction, target)
         predicted_class = np.argmax(prediction)
         target_value = np.argmax(target)
 
@@ -41,8 +45,7 @@ def test_model(path):
 
 
 def run(model_path):
-    model = NeuralNetwork()
-    model.load(model_path)
+    model = Sequential.load(model_path)
 
     scale = 30
     display = pygame.display.set_mode((840, 840))
@@ -104,4 +107,4 @@ def run(model_path):
 
 
 if __name__ == '__main__':
-    run('model_with_tuning.npz')
+    run('my_models/model_with_tuning.npz')
