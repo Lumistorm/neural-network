@@ -20,7 +20,9 @@ class Linear(Layer):
 
     def forward(self, inputs):
         self.inputs = inputs
-
+        print(self.weights.shape)
+        print(self.biases.shape)
+        print(inputs.shape)
         return inputs @ self.weights + self.biases
 
     def backward(self, output_gradient):
@@ -39,7 +41,7 @@ class Linear(Layer):
             'biases': self. biases
         }
 
-    def load_parameters(self, parameters):
+    def set_parameters(self, parameters):
         self.weights = parameters['weights']
         self.biases = parameters['biases']
 

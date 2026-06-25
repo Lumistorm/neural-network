@@ -16,7 +16,7 @@ class Layer:
     def parameters(self):
         return {}
 
-    def load_parameters(self, parameters):
+    def set_parameters(self, parameters):
         pass
 
     def get_config(self):
@@ -33,6 +33,3 @@ def register_layer(cls):
 
 
 LAYER_REGISTRY = {}
-
-
-

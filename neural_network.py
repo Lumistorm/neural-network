@@ -73,8 +73,7 @@ class NeuralNetwork:
 
     def update_layers(self, learning_rate):
         for layer in self.layers:
-            if isinstance(layer, Linear):
-                layer.update_parameters(learning_rate)
+            layer.update_parameters(learning_rate)
 
     def save(self, path):
         model_dict = {}
@@ -100,7 +99,6 @@ class NeuralNetwork:
             parameters = layer['parameters']
 
             layer_instance = LAYER_REGISTRY[layer_type].from_config(config)
-            if parameters:
-                layer_instance.load_parameters(parameters)
+            layer_instance.set_parameters(parameters)
 
             self.layers.append(layer_instance)
