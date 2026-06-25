@@ -1,4 +1,5 @@
 import numpy as np
+from layer import LAYER_REGISTRY
 from linear import Linear
 from activations import ReLU, SoftMax
 
@@ -76,20 +77,30 @@ class NeuralNetwork:
                 layer.update_parameters(learning_rate)
 
     def save(self, path):
-        model_data = {}
+        model_dict = {}
 
         for index, layer in enumerate(self.layers):
-            if isinstance(layer, Linear):
-                model_data[f'w_{index}'] = layer.weights
-                model_data[f'b_{index}'] = layer.bias
+            model_dict[f'layer_{index}'] = {
+                'type': type(layer).__name__,
+                'config': layer.get_config(),
+                'parameters': layer.parameters(),
+            }
 
-        np.savez(path, **model_data)
+        np.savez(path, **model_dict, allow_pickle=True)
 
     def load(self, path):
-        with np.load(path) as f:
-            model_data = {key: f[key] for key in f.files}
+        with np.load(path, allow_pickle=True) as f:
+            model_dict = {key: f[key].item() for key in f.files}
 
-        for index, layer in enumerate(self.layers):
-            if isinstance(layer, Linear):
-                layer.weights = model_data[f'w_{index}']
-                layer.bias = model_data[f'b_{index}']
+        self.layers = []
+
+        for layer in model_dict.values():
+            layer_type = layer['type']
+            config = layer['config']
+            parameters = layer['parameters']
+
+            layer_instance = LAYER_REGISTRY[layer_type].from_config(config)
+            if parameters:
+                layer_instance.load_parameters(parameters)
+
+            self.layers.append(layer_instance)

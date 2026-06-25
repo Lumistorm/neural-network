@@ -104,4 +104,4 @@ def run(model_path):
 
 
 if __name__ == '__main__':
-    run('model_extra_tuning.npz')
+    run('model_with_tuning.npz')

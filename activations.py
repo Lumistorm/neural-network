@@ -1,8 +1,17 @@
 import numpy as np
+from layer import Layer, register_layer
 
 
-class Sigmoid:
+class Activation(Layer):
     def __init__(self):
+        super().__init__()
+
+
+@register_layer
+class Sigmoid(Activation):
+    def __init__(self):
+        super().__init__()
+
         self.output = None
 
     def forward(self, inputs):
@@ -13,8 +22,11 @@ class Sigmoid:
         return output_gradient * self.output * (1 - self.output)
 
 
-class ReLU:
+@register_layer
+class ReLU(Activation):
     def __init__(self):
+        super().__init__()
+
         self.output = None
 
     def forward(self, inputs):
@@ -25,8 +37,11 @@ class ReLU:
         return output_gradient * (self.output > 0)
 
 
-class SoftMax:
+@register_layer
+class SoftMax(Activation):
     def __init__(self):
+        super().__init__()
+
         self.output = None
 
     def forward(self, inputs):
