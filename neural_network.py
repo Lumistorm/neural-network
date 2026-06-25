@@ -1,67 +1,6 @@
 import numpy as np
-
-
-class Sigmoid:
-    def __init__(self):
-        self.output = None
-
-    def forward(self, weighted_sum):
-        self.output = 1 / (1 + np.exp(-weighted_sum))
-        return self.output
-
-    def backward(self, gradiant):
-        return gradiant * self.output * (1 - self.output)
-
-
-class ReLU:
-    def __init__(self):
-        self.output = None
-
-    def forward(self, weighted_sum):
-        self.output = np.maximum(weighted_sum, 0)
-        return self.output
-
-    def backward(self, gradiant):
-        return gradiant * (self.output > 0)
-
-
-class SoftMax:
-    def __init__(self):
-        self.output = None
-
-    def forward(self, weighted_sum):
-        exp_shift = np.exp(weighted_sum - np.max(weighted_sum, axis=1, keepdims=True))
-        self.output = exp_shift / np.sum(exp_shift, axis=1, keepdims=True)
-        return self.output
-
-    def backward(self, gradient):
-        return gradient
-
-
-class Linear:
-    def __init__(self, in_features, out_features):
-        limit = np.sqrt(6 / in_features)
-        self.weights = np.random.uniform(-limit, limit, (in_features, out_features))
-        self.bias = np.zeros((out_features, ))
-
-        self.inputs = None
-        self.weights_gradient = None
-        self.bias_gradient = None
-
-    def forward(self, inputs):
-        self.inputs = inputs
-
-        return inputs @ self.weights + self.bias
-
-    def backward(self, gradient):
-        self.weights_gradient = self.inputs.T @ gradient
-        self.bias_gradient = np.sum(gradient, axis=0)
-
-        return gradient @ self.weights.T
-
-    def update_parameters(self, learning_rate):
-        self.weights -= learning_rate * self.weights_gradient
-        self.bias -= learning_rate * self.bias_gradient
+from linear import Linear
+from activations import ReLU, SoftMax
 
 
 class NeuralNetwork:
@@ -76,17 +15,6 @@ class NeuralNetwork:
         ]
 
     def train(self, inputs, targets, epochs, batch_size, learning_rate):
-        """
-        Gradient descent through multiple epochs
-
-        :param inputs:
-        :param targets:
-        :param epochs:
-        :param batch_size:
-        :param learning_rate:
-        :return:
-        """
-
         num_inputs = len(inputs)
 
         for epoch in range(epochs):
