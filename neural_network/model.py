@@ -1,10 +1,10 @@
 import numpy as np
 
-from ..layers import Layer, LAYER_REGISTRY
-from ..losses.losses import cross_entropy_loss
+from neural_network.layers import Layer, LAYER_REGISTRY
+from neural_network.losses.losses import cross_entropy_loss
 
 
-class Sequential:
+class Model:
     def __init__(self, layers: list[Layer]) -> None:
         self.layers = layers
 
@@ -78,7 +78,7 @@ class Sequential:
         np.savez(path, **model_dict, allow_pickle=True)
 
     @classmethod
-    def load(cls, path: str) -> Sequential:
+    def load(cls, path: str) -> Model:
         with np.load(path, allow_pickle=True) as f:
             model_dict = {key: f[key].item() for key in f.files}
 

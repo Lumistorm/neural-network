@@ -1,4 +1,4 @@
-from .models import Sequential
+from .model import Model
 from . import layers
 from . import activations
 from . import losses

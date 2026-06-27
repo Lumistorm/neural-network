@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 import sys
 
-from neural_network import Sequential, layers, activations, losses, mnist
+from neural_network import Model, layers, activations, losses, mnist
 
 
 def train_model(path):
@@ -14,7 +14,7 @@ def train_model(path):
         layers.Linear(256, 10),
         activations.Softmax(),
     ]
-    model = Sequential(model_layers)
+    model = Model(model_layers)
     x_train, y_train = mnist.preprocess_mnist_train()
 
     model.train(x_train, y_train, batch_size=10, epochs=21, learning_rate=0.1)
@@ -22,7 +22,7 @@ def train_model(path):
 
 
 def test_model(path):
-    model = Sequential.load(path)
+    model = Model.load(path)
     x_test, y_test = mnist.preprocess_mnist_test()
     correct = 0
     for index, inputs in enumerate(x_test):
@@ -45,7 +45,7 @@ def test_model(path):
 
 
 def run(model_path):
-    model = Sequential.load(model_path)
+    model = Model.load(model_path)
 
     scale = 30
     display = pygame.display.set_mode((840, 840))
