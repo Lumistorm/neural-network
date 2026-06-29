@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..layers.layer import Layer, register_layer
+from ..layers import Layer, register_layer
 
 
 @register_layer

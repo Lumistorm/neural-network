@@ -75,7 +75,7 @@ def run(model_path):
             image_array[0, grid_y * 28 + grid_x] = 1
             image_array[0, (grid_y - 1) * 28 + grid_x] = 1
             image_array[0, (grid_y + 1) * 28 + grid_x] = 1
-            # image_array[0, grid_y * 28 + grid_x + 1] = 1
+            image_array[0, grid_y * 28 + grid_x + 1] = 1
             image_array[0, grid_y * 28 + grid_x - 1] = 1
 
             # add lossy
